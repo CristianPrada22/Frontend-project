@@ -1,0 +1,13 @@
+.labels2 {}
+
+.modal-title {
+    background: linear-gradient(to right, #8DBB2C, #0C2D43, #39A6DC);
+    color: white;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.tableF {
+    border: none;
+    background-color: white;
+}
