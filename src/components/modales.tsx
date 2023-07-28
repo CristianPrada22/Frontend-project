@@ -1,7 +1,5 @@
-import React, { ReactNode,useState } from 'react';
+import React, { ReactNode } from 'react';
 import '../assets/css/Modal.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faSearchPlus, faTimes, faEraser } from '@fortawesome/free-solid-svg-icons';
 
 interface ModalProps {
     show: boolean;
@@ -10,24 +8,18 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ show, onClose, children }) => {
-    
     if (!show) return null;
 
     return (
         <div className="modal-overlay">
-            <div className="modal">
+            <div className="modal-alerts">
                 <button className="modal-close" onClick={onClose}>
                     &times;
                 </button>
+               
+                <div style={{display:'flex', justifyContent:'center', alignItems:'center', flexDirection:'column'}}>
                 {children}
-                <div className="modal-buttons">
-          <button className="form-button-erase">
-            Borrar <FontAwesomeIcon icon={faEraser} className="form-icon" />
-          </button>
-          <button className="form-button-cancel" onClick={handleCloseModal}>
-            Cancelar <FontAwesomeIcon icon={faTimes} className="form-icon" />
-          </button>
-        </div>
+                </div>
             </div>
         </div>
     );

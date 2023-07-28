@@ -2,12 +2,19 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt, faTimes, faSave } from '@fortawesome/free-solid-svg-icons';
 import Modales from "./modales";
+import { faSearch, faSearchPlus, faEraser } from '@fortawesome/free-solid-svg-icons';
+import imagenModal_info from '../images/modal_info.png';
+import imagenModal_wrong from '../images/modal_wrong.png';
+import imagenModal_done from '../images/modal_done.png';
 
 const Formulario = () => {
-    
-    const [errorTitle, setErrorTitle] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
-    const [openModal, setOpenModal] = useState(false);
+
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [isImageModal, setImageModal] = useState<string>('');
+
+    const handleCloseModal = () => {
+        setModalOpen(false);
+    };
 
     const [formData, setFormData] = useState({
         primerNombre: '',
@@ -31,16 +38,22 @@ const Formulario = () => {
             genero: '',
             estadoCivil: '',
         });
+        setModalOpen(true);
+        setImageModal(imagenModal_info);
     };
 
     const handleCancelar = () => {
         // Lógica para cancelar (puedes implementar lo que necesites)
         console.log('Cancelar');
+        setModalOpen(true);
+        setImageModal(imagenModal_wrong);
     };
 
     const handleGuardar = () => {
         // Lógica para guardar (puedes implementar lo que necesites)
         console.log('Guardar', formData);
+        setModalOpen(true);
+        setImageModal(imagenModal_done);
     };
 
     return (
@@ -125,7 +138,7 @@ const Formulario = () => {
                     </table>
                 </div>
             </form>
-            <div style={{display: 'flex',justifyContent:'flex-end',marginTop: '2%'}}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2%' }}>
                 <button className="form-button-erase" onClick={handleLimpiar}>
                     Limpiar <FontAwesomeIcon icon={faTrashAlt} />
                 </button>
@@ -136,6 +149,17 @@ const Formulario = () => {
                     Guardar <FontAwesomeIcon icon={faSave} />
                 </button>
             </div>
+            <Modales show={isModalOpen} onClose={handleCloseModal}>
+                <img src={isImageModal} alt="Imagen modal" />
+                <div className="modal-buttons">
+                    <button className="form-button-cancel" onClick={handleCloseModal}>
+                        Cancelar <FontAwesomeIcon icon={faTimes} className="form-icon" />
+                    </button>
+                    <button className="form-button-save2" onClick={handleCloseModal}>
+                        Aceptar <FontAwesomeIcon icon={faSave} className="form-icon" />
+                    </button>
+                </div>
+            </Modales>
         </div>
     );
 };
