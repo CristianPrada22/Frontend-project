@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt, faTimes, faSave } from '@fortawesome/free-solid-svg-icons';
+import Modales from "./modales";
 
 const Formulario = () => {
+    
+    const [errorTitle, setErrorTitle] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+    const [openModal, setOpenModal] = useState(false);
+
     const [formData, setFormData] = useState({
         primerNombre: '',
         segundoNombre: '',
@@ -119,7 +125,7 @@ const Formulario = () => {
                     </table>
                 </div>
             </form>
-            <div>
+            <div style={{display: 'flex',justifyContent:'flex-end',marginTop: '2%'}}>
                 <button className="form-button-erase" onClick={handleLimpiar}>
                     Limpiar <FontAwesomeIcon icon={faTrashAlt} />
                 </button>
