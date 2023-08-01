@@ -1,65 +1,169 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashAlt, faTimes, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faTrashAlt, faTimes, faSave, faUpload } from '@fortawesome/free-solid-svg-icons';
 import Modales from "./modales";
 import { faSearch, faSearchPlus, faEraser } from '@fortawesome/free-solid-svg-icons';
 import imagenModal_info from '../images/modal_info.png';
 import imagenModal_wrong from '../images/modal_wrong.png';
 import imagenModal_done from '../images/modal_done.png';
+import axios from 'axios';
 
-const Formulario = () => {
+interface FormularioProps {
+    searchQuery: string;
+}
 
+interface Persona {
+    [key: string]: string;
+    tipo_documento: string;
+    numero_documento: string;
+    nombre: string;
+    apellido_1: string;
+    apellido_2: string;
+}
+
+
+const Formulario: React.FC<FormularioProps> = ({ searchQuery }) => {
     const [isModalOpen, setModalOpen] = useState(false);
     const [isImageModal, setImageModal] = useState<string>('');
+    const [searchResults, setSearchResults] = useState<Persona[]>([]);
+    const [lastSearchQuery, setLastSearchQuery] = useState<string | null>(null);
+    const [actionType, setActionType] = useState<"guardar" | "actualizar">("guardar");
+
 
     const handleCloseModal = () => {
         setModalOpen(false);
     };
 
     const [formData, setFormData] = useState({
-        primerNombre: '',
-        segundoNombre: '',
-        primerApellido: '',
-        segundoApellido: '',
-        fechaNacimiento: '',
-        paisNacimiento: '',
-        genero: '',
-        estadoCivil: '',
+        tipo_documento: "",
+        numero_documento: "",
+        nombre: "",
+        apellido_1: "",
+        apellido_2: "",
     });
 
     const handleLimpiar = () => {
         setFormData({
-            primerNombre: '',
-            segundoNombre: '',
-            primerApellido: '',
-            segundoApellido: '',
-            fechaNacimiento: '',
-            paisNacimiento: '',
-            genero: '',
-            estadoCivil: '',
+            nombre: "",
+            apellido_1: '',
+            apellido_2: '',
+            tipo_documento: '',
+            numero_documento: '',
+
         });
+
         setModalOpen(true);
-        setImageModal(imagenModal_info);
+        setImageModal(imagenModal_done);
     };
 
     const handleCancelar = () => {
-        // Lógica para cancelar (puedes implementar lo que necesites)
         console.log('Cancelar');
         setModalOpen(true);
         setImageModal(imagenModal_wrong);
     };
 
-    const handleGuardar = () => {
-        // Lógica para guardar (puedes implementar lo que necesites)
-        console.log('Guardar', formData);
-        setModalOpen(true);
-        setImageModal(imagenModal_done);
+    const handleBuscar = async (parametro: string) => {
+        if (parametro.trim() !== '') { // Verifica que searchQuery no esté vacío
+            console.log("aqui estoy", parametro);
+            try {
+                const url = `http://localhost:8000/person/api/v1/person/${parametro}`;
+                const response = await axios.get<Persona>(url);
+                if (response.status === 200) {
+                    // Actualizar el estado con los resultados de la búsqueda
+                    setFormData(response.data);
+                    setActionType("actualizar");
+
+                }
+                console.log(searchResults[0].nombre);
+
+
+            } catch (error) {
+                console.error("Error en la búsqueda:", error);
+            }
+        }
     };
+
+
+
+
+    // Función para guardar
+    const handleGuardarClick = () => {
+        setActionType("guardar");
+        handleGuardar(formData.numero_documento);
+    };
+
+    // Función para actualizar
+    const handleActualizarClick = () => {
+        setActionType("actualizar");
+        handleGuardar(formData.numero_documento);
+    };
+
+    const handleGuardar = async (parametro: string) => {
+        try {
+            if (actionType === "guardar") {
+                const url = "http://localhost:8000/person/api/v1/person/";
+
+                const response = await axios.post(url, formData, {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                handleLimpiar();
+                // Si la petición fue exitosa, mostramos la imagen del modal de éxito
+                setModalOpen(true);
+                setImageModal(imagenModal_done);
+
+            } else if (actionType === "actualizar") {
+                console.log(parametro);
+                const url = `http://localhost:8000/person/api/v1/person/${parametro}/`;
+
+                const response = await axios.put(url, formData, {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                handleLimpiar();
+                // Si la petición fue exitosa, mostramos la imagen del modal de éxito
+                setModalOpen(true);
+                setImageModal(imagenModal_done);
+            }
+        } catch (error) {
+            console.error("Error en la petición:", (error as Error).message);
+            // En caso de error, mostramos la imagen del modal de error
+            setModalOpen(true);
+            setImageModal(imagenModal_wrong);
+        }
+    };
+
+
+
+
+    const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = event.target;
+
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            [name]: value,
+        }));
+    };
+
+
+    useEffect(() => {
+        if (lastSearchQuery !== searchQuery) {
+            setLastSearchQuery(searchQuery); // Actualizar el lastSearchQuery con el nuevo valor
+
+            // Realizar la búsqueda solo si el valor de búsqueda ha cambiado
+            handleBuscar(searchQuery);
+        }
+    }, [searchQuery, lastSearchQuery]);
+
+
 
     return (
         <div>
-            <div className="modal-title">Información</div>
-            <br />
+            {/* ...contenido del formulario... */}
             <form style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div>
                     <table className='tableF'>
@@ -68,7 +172,7 @@ const Formulario = () => {
                                 <td>
                                     <label>
                                         Primer Nombre*
-                                        <input type="text" name="primerNombre" value={formData.primerNombre} />
+                                        <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} />
                                     </label>
                                 </td>
                             </tr>
@@ -76,23 +180,7 @@ const Formulario = () => {
                                 <td>
                                     <label>
                                         Primer Apellido*
-                                        <input type="text" name="primerApellido" value={formData.primerApellido} />
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <label>
-                                        Fecha de Nacimiento* <br /><br />
-                                        <input type="date" name="fechaNacimiento" value={formData.fechaNacimiento} />
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <label>
-                                        Género*
-                                        <input type="text" name="genero" value={formData.genero} />
+                                        <input type="text" name="apellido_1" value={formData.apellido_1} onChange={handleChange} />
                                     </label>
                                 </td>
                             </tr>
@@ -105,50 +193,58 @@ const Formulario = () => {
                             <tr>
                                 <td>
                                     <label>
-                                        Segundo Nombre*
-                                        <input type="text" name="segundoNombre" value={formData.segundoNombre} />
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <label>
                                         Segundo Apellido*
-                                        <input type="text" name="segundoApellido" value={formData.segundoApellido} />
+                                        <input type="text" name="apellido_2" value={formData.apellido_2} onChange={handleChange} />
                                     </label>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
                                     <label>
-                                        País de Nacimiento*
-                                        <input type="text" name="paisNacimiento" value={formData.paisNacimiento} />
+                                        Tipo de documento*
+                                        <br />
+                                        <select className="form-select" name='tipo_documento' value={formData.tipo_documento} onChange={handleChange}>
+                                            <option value="" disabled selected>
+                                                Seleccione una opción
+                                            </option>
+                                            <option value="cc">Cédula de ciudadanía</option>
+                                            <option value="CE">Cédula de extranjería</option>
+                                            <option value="Past">Pasaporte</option>
+                                            <option value="nit">NIT</option>
+                                        </select>
                                     </label>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
                                     <label>
-                                        Estado Civil*
-                                        <input type="text" name="estadoCivil" value={formData.estadoCivil} />
+                                        Número de documento*
+                                        <input type="text" name="numero_documento" value={formData.numero_documento} onChange={handleChange} />
                                     </label>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                    <div style={{ display: 'flex', gap: "2%", justifyContent: 'flex-end', marginTop: '2%' }}>
+                        <button className="form-button-erase" onClick={handleLimpiar} type="button">
+                            Limpiar <FontAwesomeIcon icon={faTrashAlt} />
+                        </button>
+                        <button className="form-button-cancel" onClick={handleCancelar} type="button">
+                            Cancelar <FontAwesomeIcon icon={faTimes} />
+                        </button>
+                        <button className="form-button-save" type="button" onClick={handleGuardarClick}>
+                            Guardar <FontAwesomeIcon icon={faSave} />
+                        </button>
+
+                        <button className="form-button-upload" type="button" onClick={handleActualizarClick}>
+                            Actualizar <FontAwesomeIcon icon={faUpload} />
+                        </button>
+                    </div>
                 </div>
+
+
             </form>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2%' }}>
-                <button className="form-button-erase" onClick={handleLimpiar}>
-                    Limpiar <FontAwesomeIcon icon={faTrashAlt} />
-                </button>
-                <button className="form-button-cancel" onClick={handleCancelar}>
-                    Cancelar <FontAwesomeIcon icon={faTimes} />
-                </button>
-                <button className="form-button-save" onClick={handleGuardar}>
-                    Guardar <FontAwesomeIcon icon={faSave} />
-                </button>
-            </div>
+
             <Modales show={isModalOpen} onClose={handleCloseModal}>
                 <img src={isImageModal} alt="Imagen modal" />
                 <div className="modal-buttons">
