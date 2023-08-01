@@ -74,8 +74,6 @@ const Formulario: React.FC<FormularioProps> = ({ searchQuery }) => {
                     setActionType("actualizar");
 
                 }
-                console.log(searchResults[0].nombre);
-
 
             } catch (error) {
                 console.error("Error en la búsqueda:", error);
@@ -98,9 +96,27 @@ const Formulario: React.FC<FormularioProps> = ({ searchQuery }) => {
         handleGuardar(formData.numero_documento);
     };
 
+    const isFormDataValid = (data: Persona) => {
+        return (
+            data.nombre.trim() !== "" &&
+            data.apellido_1.trim() !== "" &&
+            data.apellido_2.trim() !== "" &&
+            data.tipo_documento.trim() !== "" &&
+            data.numero_documento.trim() !== ""
+        );
+    };
+
+
     const handleGuardar = async (parametro: string) => {
         try {
             if (actionType === "guardar") {
+                if (!isFormDataValid(formData)) {
+                    // Si formData no es válido, muestra el modal de error
+                    setModalOpen(true);
+                    setImageModal(imagenModal_info);
+                    return; // Detén la ejecución de la función para que no se haga la petición
+                }
+
                 const url = "http://localhost:8000/person/api/v1/person/";
 
                 const response = await axios.post(url, formData, {
@@ -114,7 +130,16 @@ const Formulario: React.FC<FormularioProps> = ({ searchQuery }) => {
                 setModalOpen(true);
                 setImageModal(imagenModal_done);
 
+
             } else if (actionType === "actualizar") {
+
+                if (!isFormDataValid(formData)) {
+                    // Si formData no es válido, muestra el modal de error
+                    setModalOpen(true);
+                    setImageModal(imagenModal_info);
+                    return; // Detén la ejecución de la función para que no se haga la petición
+                }
+                
                 console.log(parametro);
                 const url = `http://localhost:8000/person/api/v1/person/${parametro}/`;
 
@@ -128,6 +153,7 @@ const Formulario: React.FC<FormularioProps> = ({ searchQuery }) => {
                 // Si la petición fue exitosa, mostramos la imagen del modal de éxito
                 setModalOpen(true);
                 setImageModal(imagenModal_done);
+
             }
         } catch (error) {
             console.error("Error en la petición:", (error as Error).message);
@@ -135,6 +161,7 @@ const Formulario: React.FC<FormularioProps> = ({ searchQuery }) => {
             setModalOpen(true);
             setImageModal(imagenModal_wrong);
         }
+
     };
 
 
